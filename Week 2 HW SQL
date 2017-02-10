@@ -1,0 +1,86 @@
+-- CreateMovieReviewDB.sql
+-- Kelly Shaffer Week 2 607 Assignment
+
+-- Deletes any tables with these names
+DROP TABLE IF EXISTS movies;
+DROP TABLE IF EXISTS movieratings;
+
+-- Creates howto table
+CREATE TABLE movies (
+  movieID char(1) PRIMARY KEY,
+  title varchar(50) NOT NULL,
+  length char(5) NOT NULL,
+  RTMURL varchar(40) NOT NULL
+  );
+
+-- Loads csv data into newly created howto table
+LOAD DATA LOCAL INFILE 'C:/Users/Kelly/Documents/607/Movies.csv' 
+INTO TABLE movies 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+-- Creates reviews table
+CREATE TABLE movieratings (
+  movieID char(1),
+  reviewer varchar(12) NOT NULL,
+  rating float
+  );
+  
+-- Loads csv data into newly created reviews table
+LOAD DATA LOCAL INFILE 'C:/Users/Kelly/Documents/607/MovieRatings.csv'
+INTO TABLE movieratings
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+SELECT 'Movie ID','Movie Title','Movie Length (in minutes)','Rotten Tomatoes Link','Reviewer Name','Rating'
+UNION ALL
+SELECT movies.movieID, title, length, RTMURL, reviewer, rating
+FROM movies
+LEFT JOIN movieratings
+ON movies.movieID = movieratings.movieID
+INTO OUTFILE 'C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/MoviesAndReviews.csv' 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+
+/*
+-- This isn't working to export the headers --
+SELECT 
+M.movieID AS 'Movie ID',
+M.title AS 'Movie Title',
+M.length AS 'Movie Length (in minutes)',
+M.RTMURL AS 'Rotten Tomatoes Link',
+MR.reviewer AS 'Reviewer Name',
+MR.rating AS 'Rating'
+
+INTO OUTFILE 'C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/MoviesAndReviews.csv' 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+
+FROM movies AS M
+LEFT JOIN movieratings AS MR
+ON M.movieID = MR.movieID
+ORDER BY M.movieID;
+*/
+
+/*
+-- Could select all without changing the column names --
+SELECT *
+INTO OUTFILE 'C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/MoviesAndReviews.csv' 
+FIELDS TERMINATED BY ',' 
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+
+FROM movies AS M
+LEFT JOIN movieratings AS MR
+ON M.movieID = MR.movieID
+ORDER BY M.movieID;
+*/
+
+-- Check for a MySQL recognized place to export the data
+-- SHOW VARIABLES LIKE 'secure_file_priv';
