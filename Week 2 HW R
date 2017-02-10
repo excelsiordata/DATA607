@@ -1,0 +1,72 @@
+---
+title: "607 Week 2 HW KLS"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#clean up the environment
+rm(list=ls())
+
+#install and load the rio package for import
+#install.packages(rio)
+library(rio)
+library(bitops)
+library(RCurl)
+library(ggplot2)
+
+#Link to the data in github
+#movies <- import("https://raw.githubusercontent.com/excelsiordata/DATA607/master/MoviesAndReviews.csv")
+
+#Link to the data locally for full reproducibility without a manual step in between (loading .csv to github)
+movies <- import("C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/MoviesAndReviews.csv", stringsAsFactors = FALSE)
+```
+
+```{r}
+#Take a peek at the data
+head(movies)
+
+#Convert the movie length and review to numbers vs. chars
+movies$Rating <- as.numeric(as.character(movies$Rating))
+movies$`Movie Length (in minutes)` <- as.numeric(as.character(movies$`Movie Length (in minutes)`))
+
+#Create the data frame
+movies.df <- data.frame(movies, stringsAsFactors=FALSE)
+
+#Rename the movie length column
+names(movies.df)[names(movies.df)=="Movie.Length..in.minutes."] <- "Movie.Length.In.Minutes"
+
+#Take a peek at the data frame
+head(movies.df)
+
+#Calculate mean rating by movie title
+meanRating <- aggregate(movies.df[, 6], list(movies.df$Movie.Title), mean, stringsAsFactors=FALSE)
+meanRating
+names(meanRating)[names(meanRating)=="Group.1"] <- "Movie Title"
+names(meanRating)[names(meanRating)=="x"] <- "Average Rating"
+print(meanRating)
+
+meanReviewer <- aggregate(movies.df[, 6], list(movies.df$Reviewer.Name), mean, stringsAsFactors=FALSE)
+print(meanReviewer)
+
+M1 <- ggplot(movies.df, aes(x = reorder(movies.df$Movie.Title, -movies.df$Rating), y = movies.df$Rating/5)) + geom_bar(stat = "identity", fill="dodgerblue4")
+M1 <- M1 + labs(list(
+  title = "Average Movie Rating by Title",
+  x="Movie Title", y="Average Rating"))
+print(M1)
+
+M2 <- ggplot(movies.df, aes(x = reorder(movies.df$Reviewer.Name, -movies.df$Rating), y = movies.df$Rating/5)) + geom_bar(stat = "identity", fill="dodgerblue4")
+M2 <- M2 + labs(list(
+  title = "Average Score by Reviewer",
+  x="Reviewer", y="Average Rating"))
+print(M2)
+```
+
+#### Conclusions:
+
+The highest rated movie in our study was "Zootopia", with "Arrival" coming in last.   
+     
+All of the reviewers' scores seem to be in the same ballpark with the exception of Liam, who has a noticably lower average rating than the other reviewers. Seems he's a bit pickier than the others.
