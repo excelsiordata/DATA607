@@ -1,0 +1,135 @@
+---
+title: "607 Week 3 HW KLS"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Problem 3.1
+
+```{r}
+#install.packages("stringr")
+#install.packages("XML")
+library(stringr)
+library(XML)
+
+name.phone.data <- "555-1239Moe Szyslak(636) 555-0113Burns, C. Montgomery555-6542Rev. Timothy Lovejoy555 8904Ned Flanders636-555-3226Simpson, Homer5553642Dr. Julius Hibbert"
+
+names <- unlist(str_extract_all(name.phone.data,"[[:alpha:]., ]{2,}"))
+names
+#rearrange to first name, last name
+names <- str_replace(names, pattern = "C\\.", replacement = "")
+names <- gsub("  ", " ", names)
+names
+
+rearranged <- sub("(\\w+),\\s(\\w+)","\\2 \\1", names)
+rearranged
+#remove periods to get rid of it after burns
+rearranged <- str_replace(rearranged, pattern = "\\.", replacement = "")
+#add it back into rev title
+rearranged <- str_replace(rearranged, pattern = "Rev", replacement = "Rev\\.")
+#add it back into dr title
+rearranged <- str_replace(rearranged, pattern = "Dr", replacement = "Dr\\.")
+rearranged
+
+notitle <- str_replace(rearranged, pattern = "Rev", replacement = "")
+notitle <- str_replace(notitle, pattern = "Dr", replacement = "")
+notitle <- str_replace(notitle, pattern = "\\.", replacement = "")
+notitle <- str_trim(notitle)
+notitle
+```
+
+#### Problem 3.2
+
+```{r}
+#check for dr
+dr <- str_detect(rearranged, "Dr\\.")
+dr
+
+#check for rev
+reverend <- str_detect(rearranged, "Rev\\.")
+reverend
+
+#check for both at once
+
+drandrev <- str_detect(rearranged, "Dr\\.|Rev\\.")
+drandrev
+```
+
+#### Problem 3.3
+
+```{r}
+#Gives a total count of names with 2 spaces - people with two names
+spacecount <- gsub(' {2,}',' ',notitle)
+length(strsplit(spacecount, ' ')[[6]])
+
+#Gives individual space counts per name, then give boolean answer
+twonames <- str_count(notitle,"\\w+")
+twonames <- str_detect(notitle, "3")
+twonames
+
+#Gives a total count of names with 1 space - people with one name
+spacecount <- gsub(' {1,}',' ',notitle)
+length(strsplit(spacecount, ' ')[[6]])
+```
+
+#### Problem 4a
+[0-9]+\\$
+This is a string with any number of integers between zero and 9, with a dollar sign immediately following. The dollar sign does not have to be the end of the string.
+```{r}
+foura <- c("607$", "sixohsevenisgreat$", "607isgreat", "607607$**", "607607**$")
+foura <- str_extract(foura, "[0-9]+\\$")
+foura
+```
+
+#### Problem 4b
+\\b[a-z]{1,4}\\b
+This is a string with between 1 and 4 (inclusive) small alphabetical characters, surrounded by a single space on both sides.
+```{r}
+fourb <- c(" 607 ", " sixohseven ", " six ", " oh ", " seven ")
+fourb <- str_extract(fourb, "\\b[a-z]{1,4}\\b")
+fourb
+```
+
+#### Problem 4c
+.*?\\.txt$
+This is a string that ends in .txt matching at least zero times and at most one time.
+```{r}
+fourc <- c("607.txt", "sixohseven.txt ", "sixtxt.xls")
+fourc <- str_extract(fourc, ".*?\\.txt$")
+fourc
+```
+
+#### Problem 4d
+\\d{2}/\\d{2}/\\d{4}
+This string is two integer values between zero and nine, forward slash, two integer values between zero and nine, forward slash, four integer values between zero and nine.
+```{r}
+fourd <- c("02/15/2017", "607/607/607", "60/7607/60 ", "hi/607/hi", "60/76/6076")
+fourd <- str_extract(fourd, "\\d{2}/\\d{2}/\\d{4}")
+fourd
+```
+
+#### Problem 4e
+<(.+?)>.+?</\\1>
+This string is any properly formatted HTML tag.
+```{r}
+foure <- c("<b>Hi</b>", "<i>Hello<i>", "<u>Goodbye<u/>", "<u>Goodbye</u>")
+foure <- str_extract(foure, "<(.+?)>.+?</\\1>")
+foure
+```
+
+#### Problem 9
+
+```{r}
+secret.code <- c("clcopCow1zmstc0d87wnkig7OvdicpNuggvhryn92Gjuwczi8hqrfpRxs5Aj5dwpn0Tanwo Uwisdij7Lj8kpf03AT5Idr3coc0bt7yczjatOaootj55t3Nj3ne6c4Sfek.r1w1YwwojigO d6vrfUrbz2.2bkAnbhzgv4R9i05zEcrop.wAgnb.SqoU65fPa1otfb7wEm24k6t3sR9zqe5 fy89n6Nd5t9kc4fE905gmc4Rgxo5nhDk!gr")
+
+#Let's see if there's a secret code in the lower letters
+secret.code.lower <- str_extract_all(secret.code,"[:lower:]")
+secret.code.lower
+
+#Doesn't look like it. Let's try the uppers
+secret.code.upper <- str_extract_all(secret.code,"[:upper:]")
+secret.code.upper
+```
