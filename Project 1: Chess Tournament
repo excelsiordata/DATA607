@@ -1,0 +1,80 @@
+---
+title: "607 Project 1 KLS"
+output: html_document
+---
+
+###Chess Tournament
+```{r}
+#install.packages("rio")
+#install.packages("RCurl")
+#install.packages("bitops")
+#install.packages("stringr")
+#install.packages("ggplot2")
+library(rio)
+library(RCurl)
+library(stringr)
+library(ggplot2)
+
+#Load the data in
+x <- getURL("https://raw.githubusercontent.com/excelsiordata/DATA607/master/tournamentinfo.txt")
+TourneyOutput <- read.csv(text = x, head=TRUE, sep="|", stringsAsFactors=FALSE, col.names = c("Pair", "Player.Name", "Total.Pts", "Round.1", "Round.2", "Round.3", "Round.4", "Round.5", "Round.6", "Round.7", "Empty"), skip = 1, strip.white = TRUE)
+
+#Take a peek
+head(TourneyOutput)
+
+#Get rid of the junk lines
+TourneyOutput <- TourneyOutput[seq(-2,-194,-3), ]
+
+#Take a peek
+head(TourneyOutput)
+
+#Create group 1
+TourneyDataGroup1 <- TourneyOutput[seq(2,388/3,2),]
+head(TourneyDataGroup1)
+
+#Create group 2
+TourneyDataGroup2 <- TourneyOutput[seq(3,388/3,2),]
+head(TourneyDataGroup2)
+
+#Create master data set with one row per player combining group 1 and group 2
+MasterDataGroup <- data.frame(TourneyDataGroup1, TourneyDataGroup2)
+
+#Begin to create final output
+MDGFinal <- data.frame(TourneyDataGroup1$Player.Name, TourneyDataGroup2$Pair, TourneyDataGroup1$Total.Pts)
+
+#Create prerating column
+Pre <- unlist(str_extract_all(TourneyDataGroup2, "R:[:space:]...."))
+Pre <- gsub("R: ", "", Pre)
+Pre <- data.frame(unlist(Pre))
+colnames(Pre) <- ("Pre.Rating")
+head(Pre)
+
+#Link newly created prerating column to the other columns for output
+MDGFinalOutput <- cbind(MDGFinal,Pre)
+names(MDGFinalOutput)[names(MDGFinalOutput)=="TourneyDataGroup1.Player.Name"] <- "Player's Name"
+names(MDGFinalOutput)[names(MDGFinalOutput)=="TourneyDataGroup2.Pair"] <- "Player's State"
+names(MDGFinalOutput)[names(MDGFinalOutput)=="TourneyDataGroup1.Total.Pts"] <- "Total Number of Points"
+names(MDGFinalOutput)[names(MDGFinalOutput)=="Pre.Rating"] <- "Player's Pre-Rating"
+head(MDGFinalOutput)
+
+#Take a look at the distribution of scores
+plot(MDGFinalOutput$`Total Number of Points`, main = "Distribution of Total Points", xlab = "Total Points", ylab = "Count")
+
+#Take a look at the distribution of scores
+plot(x = MDGFinalOutput$`Total Number of Points`, main = "Distribution of Total Points", xlab = "Total Points", ylab = "Count")
+
+#Let's look at total number of points vs. player's pre-rating
+MDG <- ggplot(MDGFinalOutput, aes(x=MDGFinalOutput$`Total Number of Points`, y=MDGFinalOutput$`Player's Pre-Rating`)) +
+  geom_point()
+
+#Add a title and edit the axes
+MDG <- MDG + labs(list(
+  title = "Player's Total Points vs. Their Pre-Rating",
+  x="Player's Total Points",
+  y="Player's Pre-Rating"))
+print(MDG)
+
+#Generate CSV file with output table
+#Written to C:\Users\Kelly\Documents\607 on my local PC
+write.csv(MDGFinalOutput, "Chess_Player_Summary.csv", row.names=FALSE)
+```
