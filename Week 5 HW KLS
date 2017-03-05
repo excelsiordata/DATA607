@@ -1,0 +1,101 @@
+---
+title: "607 Week 5 HW KLS"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+##Kelly Shaffer  
+##Week 5 Homework for DATA607  
+###The data describes arrival delays for four airlines across five destinations. Deliverables include:
+####1) Creating a .csv file that includes the flight information in the table using a wide structure.  
+####2) Reading the .csv file into R, and using tidyr and dplyr to tidy and transform the data.  
+####3) Performing analysis to compare the arrival delays for the four airlines.  
+####4) Saving to an r markdown file, posting to rpubs, posting to github.  
+
+```{r}
+#install.packages("rio")
+#install.packages("RCurl")
+#install.packages("bitops")
+#install.packages("ggplot2")
+#install.packages("tidyr")
+#install.packages("dplyr")
+library(rio)
+library(RCurl)
+library(bitops)
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+#Load the data
+x <- getURL("https://raw.githubusercontent.com/excelsiordata/DATA607/master/FlightDelays.csv")
+FlightDelays <- read.csv(text = x, head=TRUE, sep=",", stringsAsFactors=FALSE, col.names = c("Airline", "Status", "Los.Angeles", "Phoenix", "San.Diego", "San.Francisco", "Seattle"))
+
+#Take a look at the data and make sure everything loaded in properly
+head(FlightDelays)
+#Looks good!
+
+#Let's get the separate city columns into rows
+TidyFlightDelays1 <- data.frame(gather(FlightDelays, "City", "n", 3:7))
+
+(TidyFlightDelays1)
+
+tbl_df(TidyFlightDelays1)
+
+glimpse(TidyFlightDelays1)
+
+View(TidyFlightDelays1)
+
+#Let's split on time/delayed out into their own columns
+TidyFlightDelays2 <- data.frame(spread(TidyFlightDelays1, "Status", "n", 2:2))
+
+(TidyFlightDelays2)
+
+tbl_df(TidyFlightDelays2)
+
+glimpse(TidyFlightDelays2)
+
+View(TidyFlightDelays2)
+```
+###Now that we've got our data frame into tidy format, we can begin to analyze it. TidyFlightDelays1 is not tidy, but TidyFlightDelays2 is.
+
+```{r}
+TidyFlightDelays1 %>%
+  group_by(Airline, Status) %>%
+  summarise(Mean = mean(n), Total.Flights = sum(sum(n))) %>%
+  arrange(Mean)
+```
+#### As you can see here, this isn't a very useful view of the data because the volume of flights varies per airline, so mean doesn't mean anything. This data also isn't tidy, since on time and delayed have separate rows in the same column. Overall, we can see that this data is pretty difficult to work with.   
+   
+#### Let's work with the tidy data frame going forward, TidyFlightDelays2.
+
+```{r}
+TidyFlightDelays2 %>%
+  group_by(Airline) %>% 
+  mutate(Ratio = delayed/on.time) %>% 
+  arrange(desc(Ratio))
+```
+#### Count of delayed and on time flights isn't a very useful view of the data because the volume of flights varies per airline, as we saw before. I thought a useful way to compare the data in an "apples to apples" fashion would be to compute the ratio of delayed to on time flights. This allows us to truly compare the airlines. Taking the city out of the picture will also help reach a final number per airline we can use for comparison. Let's do that now.
+
+```{r}
+TidyFlightDelays2 %>%
+  group_by(Airline) %>% 
+  summarise(Delayed=sum(delayed), On.Time=sum(on.time)) %>% 
+  mutate(Ratio = Delayed/On.Time) %>% 
+  arrange(desc(Ratio))
+```
+#### With city factored in and not factored in, Allegiant still has the highest ratio of delayed flights to on time flights.   
+#### Flying out of San Diego on Allegiant is where you are most likely to encounter a flight delay. Interestingly, flying Allegiant out of San Francisco will be your best bet in terms of avoiding these delays. 
+#### Flying out of AM West is your best bet overall, regardless of city. 
+
+```{r}
+FlightDelays <- ggplot(TidyFlightDelays2, aes(x=TidyFlightDelays2$delayed, y=TidyFlightDelays2$on.time)) +
+  geom_point()
+
+FlightDelays <- FlightDelays + labs(list(
+  title = "Delayed Flights vs. On Time Flights",
+  x="Delayed Flights",
+  y="On Time Flights"))
+print(FlightDelays)
+```
