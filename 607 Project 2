@@ -1,0 +1,230 @@
+---
+title: "607 Project 2: Kelly Shaffer and Curwen Arthurs"
+output: html_document
+---
+
+```{r setup}
+
+```
+
+## Working with wide and untidy data sets
+
+# What is a wide dataset?
+
+Wide, or unstacked data is presented with each different data variable in a separate column. "https://en.wikipedia.org/wiki/Wide_and_narrow_data"
+
+# What is untidy data?
+
+Untidy data is messy or poorly formatted which makes is harder to do analysis.
+
+# Tidy Rules
+
+1. Each variable in the dataset is placed in its own column
+
+2. Each observation is placed in its own row
+
+3. Each value is placed in its own cell
+
+source: http://garrettgman.github.io/tidying/
+
+## Load libraries
+```{r}
+library(tidyr)
+library(dplyr)
+library(zoo)
+library(stringr)
+library(rio)
+library(RCurl)
+library(bitops)
+```
+
+## Dataset 1 
+
+# Read in the csv file into R
+
+The file can be downloaded via this link:
+
+https://bbhosted.cuny.edu/courses/1/SPS01_DATA_607_01_1172_1/db/_22605542_1/Discussion5.csv
+
+
+
+## Loading Dataset 1   
+
+```{r}
+#This code reads the Discussion5.csv file into data1 object.
+
+data1<- read.csv("https://raw.githubusercontent.com/excelsiordata/DATA607/master/Discussion5.csv", na.strings=c("","NA"), stringsAsFactors = FALSE) 
+# An additional argument is added to label all blank rows as "NA" in order to use the na.locf function
+```
+
+# Start Tidying 
+
+```{r}
+##1
+# First we need to repeat the date for each Carrier item. Thats is for each Carrier repeating the date for the shipping fee.
+
+# By using the mutate function we can update all rows missing a date value that we earlier labeled "NA" with the previous non missing value. We do this by using the na.locf function.
+
+data1.1<- mutate(data1, Date = na.locf(Date))
+
+##2
+#Second need to make the dataset into a long instead of wide format. This is done using the gather function to convert columns into rows.
+
+##3
+#Third we need to ensure that each column only contains 1 variable. Notice that the values column has both price and shipping fees so we need to change that to make the dataset tidy. We can split these into 2 different columns by using the spread function.
+
+# Lastly we can order the dataset by country in alphabetical order using the arrange function.
+
+data1.2<-
+  data1.1 %>%
+  gather("Country", "Amount", 3:10) %>% 
+  spread(Values, Amount) %>%
+  arrange(Country)
+```
+
+## Dataset 1 - Analysis
+
+```{r}
+#Analysis 1 - Percentage of tax charged 
+#Question: are we collecting enough fees vs what the company is charging
+
+#*********************************
+#analysis1 <- data1.2 %>%
+#mutate(Percentage = `Price of Carrier`/`Shipping Fees Collected`)
+
+#Analysis 2 - Average shipping cost per month
+
+#analysis<- data1.2 %>%
+
+#Analysis 3 - Average shipping cost per month by country
+
+```
+
+## Dataset 2 
+
+Table was copied from https://www.bls.gov/news.release/empsit.t19.htm and pasted into an excel sheet. It was then saved as a comma separated file "data2"
+
+# Reading the the dataset into R and extract just the table results
+```{r}
+# Create an object data2 and store the information from the csv file in it
+# Remove table title information by starting reading the from line 3 of the csv file. Set parameter skip = 2.
+# Set all blank values to NA using na.strings argument
+
+data2<- read.csv("https://raw.githubusercontent.com/excelsiordata/DATA607/master/data2.csv", skip = 2, stringsAsFactors = FALSE)
+
+# Remove footnotes and note information which is not relevant to the table for analysis.
+#Can do this by using the slice function to subset only those rows we want.
+
+data2<- slice(data2, 1:21)
+```
+
+## Start Tidying 
+
+# Split table into 2
+
+```{r}
+#First create a new table for Average hourly earnings by selecting the columns for that using the select function then save it as its own table 
+data2.1<- select(data2, Industry, Average.hourly.earnings, X, X.1, X.2)
+
+# Do the same process to create a new table for Average weekly earnings
+data2.2<- select(data2, -Average.hourly.earnings, -X, -X.1, -X.2)
+```
+
+## Tidy 2 tables separately
+
+# Tidy hourly table
+
+```{r}
+#rename the column headings combining the 2 separate values of month and year
+colnames(data2.1) <- c("Industry", "Feb 2016", "Dec 2016", "Jan 2017(p)", "Feb 2017(p)")
+
+data2hrly<-
+           data2.1 %>%
+           slice(3:21) %>% #removes the 2 rows contained the column heading info
+           gather("Date", "Average hourly earnings in dollars", 2:5) #convert columns into rows for tidyness
+```
+
+# Tidy weekly table
+
+```{r}
+#rename the column headings combining the 2 separate values of month and year
+colnames(data2.2) <- c("Industry", "Feb 2016", "Dec 2016", "Jan 2017(p)", "Feb 2017(p)")
+
+data2wkly<-
+           data2.2 %>%
+           slice(3:21) %>% #removes the 2 rows contained the column heading info
+           gather("Date", "Average weekly earnings in dollars", 2:5) #convert columns into rows for tidyness
+```
+
+## Merge 2 tidy datasets into 1 final tidy dataset
+
+```{r}
+#Merge data2hrly with data2wkly using inner join and with a composite key where the industry type and date make up the composite key
+data2final<- inner_join(data2hrly,data2wkly, by = c("Industry" = "Industry", "Date" ="Date"))
+
+#this doesn't seem to do anything, not working like it should
+data2final$`Average hourly earnings in dollars` <- gsub("$", "", data2final$`Average hourly earnings in dollars`)
+data2final$`Average weekly earnings in dollars` <- gsub("$", "", data2final$`Average weekly earnings in dollars`)
+
+#this deletes random values too if run
+data2final$`Average weekly earnings in dollars` <- str_replace_all((data2final$`Average weekly earnings in dollars`), fixed("$"), "")
+data2final$`Average hourly earnings in dollars` <- str_replace_all((data2final$`Average hourly earnings in dollars`), fixed("$"), "")
+
+#this deletes random values if run
+data2final$`Average hourly earnings in dollars` <- as.numeric(data2final$`Average hourly earnings in dollars`)
+data2final$`Average weekly earnings in dollars` <- as.numeric(data2final$`Average weekly earnings in dollars`)
+
+head(data2final)
+```
+
+
+## Analysis
+
+```{r}
+
+
+```
+
+## Dataset 3  
+The third data set we'll look at is a subset of a "Women in development" data set that I found on in the World Development Indicators site that a classmate Kyle posted. I decided to exclusively study life expectancy at birth by country and gender. It's untidy, so we'll clean it up.
+
+```{r}
+#Load in all the data
+x <- getURL("https://raw.githubusercontent.com/excelsiordata/DATA607/master/Women_in_development.csv")
+WID <- read.csv(text = x, head=TRUE, sep=",", stringsAsFactors=FALSE, skip = 3, col.names = c("Country", "Male.Life.Expectancy.in.Years", "Female.Life.Expectancy.in.Years", "% Women Married by 18", "Male Fin Acct", "Fem Fin Acct", "% Male Salaried Employment", "% Fem Salaried Employment", "Fem PT Employment", "Firms w Fem Ownership", "Fem leg, sen off, and mangrs", "Women in parliaments", "Nondisc clause mentions gender in const"))
+
+#Create the data frame
+LEbyCountry <- data.frame(WID$Country, WID$Male.Life.Expectancy.in.Years, WID$Female.Life.Expectancy.in.Years)
+
+#Take a look at the data and make sure everything loaded in properly
+head(LEbyCountry)
+
+#Put gender into its own column, and life expectancy into its own column
+LEbyCandG <- data.frame(gather(LEbyCountry, "Gender", "Life.Expectancy", 2:3))
+
+#Take a look and make sure that worked properly
+head(LEbyCandG)
+tail(LEbyCandG)
+
+#Gender is messy, let's clean it up
+LEbyCandG[LEbyCandG=="WID.Male.Life.Expectancy.in.Years"] <- "Male"
+LEbyCandG[LEbyCandG=="WID.Female.Life.Expectancy.in.Years"] <- "Female"
+
+#Change the life expectancy column from char to dbl
+LEbyCandG$Life.Expectancy <- as.numeric(LEbyCandG$Life.Expectancy)
+
+#Get rid of countries with no life expectancy data
+LEbyCandG <- LEbyCandG[rowSums(is.na(LEbyCandG))==0, ]
+
+#Take a look and make sure all of that worked properly
+head(LEbyCandG)
+tail(LEbyCandG)
+
+#Let's see what the life expectancy is by gender
+LEbyCandG %>% 
+  group_by(Gender) %>%
+  summarise(Mean=mean(Life.Expectancy))
+
+#Plot the data
+plot(LEbyCandG$WID.Country, LEbyCandG$Life.Expectancy, xlab = "Country", ylab = "Life Expectancy in Years", main = "Life Expectancy by Country and Gender", frame.plot = FALSE, col = ifelse(LEbyCandG$Gender=="Female", "magenta", "blue"))
+```
