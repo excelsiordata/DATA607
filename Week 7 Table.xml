@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
 <!--
 For our week 7 assignment, we are challenged to choose 3 books on a topic that interests us. The first thing that came to mind were the Dr. Seuss books I read as a child, so we're going to use those. My favorites were:  
 
@@ -15,8 +17,6 @@ Pages: 48
   
 They are all by the same author, but part of the assignment requested that we choose something with multiple authors, so I'll be including the illustrator James Stevenson as well.
 -->
-
-<?xml version="1.0" encoding="UTF-8"?>
 
 <booklist>
 	<book>
