@@ -1,0 +1,42 @@
+<!--
+For our week 7 assignment, we are challenged to choose 3 books on a topic that interests us. The first thing that came to mind were the Dr. Seuss books I read as a child, so we're going to use those. My favorites were:  
+
+Title: "Green Eggs and Ham"  
+Authors: Dr. Seuss and James Stevenson (illustrations)  
+Pages: 72  
+  
+Title: "One fish two fish red fish blue fish"  
+Authors: Dr. Seuss and James Stevenson (illustrations)  
+Pages: 72  
+  
+"I Am NOT Going to Get up Today!"  
+Authors: Dr. Seuss and James Stevenson (illustrations)  
+Pages: 48  
+  
+They are all by the same author, but part of the assignment requested that we choose something with multiple authors, so I'll be including the illustrator James Stevenson as well.
+-->
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<booklist>
+	<book>
+		<Title>Green Eggs and Ham</Title>
+		<Author>Dr. Seuss</Author>
+		<Illustrator>James Stevenson</Illustrator>
+		<Pages>72</Pages>
+	</book>
+
+	<book>
+		<Title>One fish two fish red fish blue fish</Title>
+		<Author>Dr. Seuss</Author>
+		<Illustrator>James Stevenson</Illustrator>
+		<Pages>72</Pages>
+	</book>
+
+	<book>
+		<Title>I Am NOT Going to Get up Today</Title>
+		<Author>Dr. Seuss</Author>
+		<Illustrator>James Stevenson</Illustrator>
+		<Pages>48</Pages>
+	</book>
+</booklist>
