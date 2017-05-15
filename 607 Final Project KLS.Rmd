@@ -1,0 +1,364 @@
+---
+title: "607 Final Project KLS"
+output: html_document
+---
+
+###607 Final Project: OkCupid Analysis  
+###By: Kelly Shaffer  
+
+#####The `okc` dataset I'll be using in the analysis contains the profile details from 59,946  
+#####individuals active on the online dating site OkCupid as of June 20th, 2012. These individuals  
+#####all live within a 25 mile radius of San Francisco, California.  
+
+###I hypothesize the following things:
+#####-Smokers are less educated than non-smokers. 
+#####-Females are more likely to be vegetarian/vegan than males.  
+#####-This population will contain more individuals who identify as something  
+#####other than straight than the national average of 3.6%.  
+#####-This population is more educated than the national average. 
+#####-The males in this population are taller than the females.
+
+####Final Project Checklist items pertaining to the deliverables in this file are listed below  
+####for simplicity of grading:  
+
+Your project has a recognizable "data science workflow," such as the OSEMN workflow or Hadley  
+Wickham's Grammar of Data Science. [Example: First the data is acquired, then necessary  
+transformations and clean-up are performed, then the analysis and presentation work is performed]  
+
+    My project has been organized by Data Acquisition/Import, Data 
+    Transformation/Clean Up, and Data Analysis/Visualization.
+
+Project includes data from at least two different types of data sources (e.g., two or more of  
+these: relational or CSV, Neo4J, web page [scraped or API], MongoDB, etc.)  
+
+    Data source 1 is a csv file of OkCupid profile data.
+    Data source 2 is the "women" dataset from the datasets
+    package in R.
+
+Project includes at least one data transformation operation. [Examples: transforming from wide  
+to long; converting columns to date format]  
+
+    The following transformations have been performed:
+    Renamed all columns.
+    Changed -1 to "Rather Not Say" in `Income`
+    Extracted date from `Last Login` and created a new column
+      `Last Login Date`
+        **Converting this to date but getting errors right now
+    Created a new column `Data Pull Date` as of 2012-06-20
+      **Trying to convert this to date as well
+    Created a new column `Days Since Login` which is the difference
+      in days between `Last Login Date` and `Data Pull Date`
+
+Project includes at least one statistical analysis and at least one graphics that describes or
+validates your data.
+
+    A confidence interval and margin of error was calculated
+    for the proportion of females in the population. A bar plot
+    displays the proportion.
+
+Project includes at least one graphic that supports your conclusion(s).
+
+    Many graphics are included within the project that support my conclusions.
+
+Project includes at least one statistical analysis that supports your conclusion(s).
+
+    Many analyses have been performed that support my conclusions.
+
+Project includes at least one feature that we did not cover in class! There are many examples:
+"I used ggmap; I created a decision tree; I ranked the results; I created my presentation slides
+directly from R; I figured out to use OAuth 2.0."
+
+    I'm figuring out how to load data from a zipped file on GitHub.
+
+Presentation. Was the presentation delivered in the allotted time (3 to 5 minutes)?
+
+    I signed up to present early. Therefore, I'll be granted 8 minutes for my presentation.
+    I plan to stay within these boundaries.
+
+Presentation. Did you show (at least) one challenge you encountered in code and/or data, and
+what you did when you encountered that challenge?
+
+    Challenge: The csv file of data I'm using is too big to upload to GitHub, and
+    reproducibility is a requirement of this assignment. If I connect to the data on my local
+    machine, I will have not met this requirement.
+
+Code and data. Have you delivered the submitted code and data where it is self-contained
+preferably in rpubs.com and github? Am I able to fully reproduce your results with what you've
+delivered? You won't receive full credit if your code references data on your local machine!
+
+    I will be uploading all code to rpubs and github. The data is too large to upload to GitHub,
+    so I was unable to link to it directly that way. Therefore, I am providing the link to where
+    the data can be downloaded and saved to your machine. This should suffice as reproducibility
+    since you'll have what you need to recreate my analysis. The link to the data is below:
+    https://github.com/rudeboybert/JSE_OkCupid/blob/master/profiles.csv.zip
+
+Code and data. Does all of the delivered code run without errors?
+
+    Yes. All of the delivered code runs without errors. I have commented out a section where I
+    tried to link to the zip file on GitHub but couldn't debug the error, despite hours spent
+    on stackoverflow.
+
+Code and data. Have you delivered your code and conclusions using a "reproducible research"
+tool such as RMarkdown?
+
+    Yes, the file has been delivered in RMarkdown.
+
+###Data Acquisition, Import, Validation
+
+```{r}
+library(datasets)
+library(ggplot2)
+library(rio)
+library(downloader)
+library(mosaic)
+library(psych)
+
+#Loading the data in locally - this file is too big for GitHub
+okc <- import("C:/ProgramData/MySQL/MySQL Server 5.7/Uploads/profiles.csv", stringsAsFactors = FALSE, )
+
+#take a look at the beginning and end of the data to make sure everything loaded in properly
+#head(okc)
+#tail(okc)
+
+#Trying to connect to the original zip file on github
+#Currently getting 'error 1 in extracting from zip file'
+#    download_repo <- function(repo, user){
+#      require(downloader)
+#      url <- sprintf("https://github.com/%s/%s/blob/master/profiles.csv.zip", user, repo)
+#      tmp <- tempfile(fileext = ".zip")
+#      download(url, tmp)
+#      unzip(tmp)  
+#    }
+#    profiles <- download_repo('JSE_OkCupid','rudeboybert')
+```
+
+###Data Transformation, Clean Up
+
+```{r}
+#Rename the columns
+names(okc)[names(okc)=="age"] <- "Age"
+names(okc)[names(okc)=="body_type"] <- "Body Type"
+names(okc)[names(okc)=="diet"] <- "Diet"
+names(okc)[names(okc)=="drinks"] <- "Drinking Habits"
+names(okc)[names(okc)=="drugs"] <- "Drug Use"
+names(okc)[names(okc)=="education"] <- "Education"
+names(okc)[names(okc)=="essay0"] <- "Self Summary"
+names(okc)[names(okc)=="essay1"] <- "Doing with Life"
+names(okc)[names(okc)=="essay2"] <- "Really Good At"
+names(okc)[names(okc)=="essay3"] <- "First Thing Noticed"
+names(okc)[names(okc)=="essay4"] <- "Favorites"
+names(okc)[names(okc)=="essay5"] <- "6 Things"
+names(okc)[names(okc)=="essay6"] <- "Thinking About"
+names(okc)[names(okc)=="essay7"] <- "Friday Night"
+names(okc)[names(okc)=="essay8"] <- "Most Private Thing"
+names(okc)[names(okc)=="essay9"] <- "Message Me If"
+names(okc)[names(okc)=="ethnicity"] <- "Ethnicity"
+names(okc)[names(okc)=="height"] <- "Height (in)"
+names(okc)[names(okc)=="income"] <- "Income (in USD)"
+names(okc)[names(okc)=="job"] <- "Job"
+names(okc)[names(okc)=="last_online"] <- "Last Online"
+names(okc)[names(okc)=="location"] <- "Location"
+names(okc)[names(okc)=="offspring"] <- "Offspring"
+names(okc)[names(okc)=="orientation"] <- "Sexual Orientation"
+names(okc)[names(okc)=="pets"] <- "Pets"
+names(okc)[names(okc)=="religion"] <- "Religion"
+names(okc)[names(okc)=="sex"] <- "Gender"
+names(okc)[names(okc)=="sign"] <- "Sign"
+names(okc)[names(okc)=="smokes"] <- "Smokes"
+names(okc)[names(okc)=="speaks"] <- "Speaks"
+names(okc)[names(okc)=="status"] <- "Status"
+
+#Convert numeric variables from int to dbl
+okc$`Height (in)` = as.numeric(as.character(okc$`Height (in)`))
+okc$`Age` = as.numeric(as.character(okc$Age))
+
+#Change -1 values to "Rather Not Say" for ease of understanding/analysis
+okc$`Income (in USD)` <- gsub("-1", "Rather Not Say", okc$`Income (in USD)`)
+
+#Simplify the education values since it was cluttering my mosaic plot
+#graduated
+okc$Education <- gsub("graduated from high school", "G from HS", okc$Education)
+okc$Education <- gsub("graduated from college/university", "G from Uni", okc$Education)
+okc$Education <- gsub("graduated from two-year college", "G from 2YR", okc$Education)
+okc$Education <- gsub("graduated from masters program", "G from M", okc$Education)
+okc$Education <- gsub("graduated from law school", "G from Law", okc$Education)
+okc$Education <- gsub("graduated from med school", "G from Med", okc$Education)
+okc$Education <- gsub("graduated from ph.d program", "G from PhD", okc$Education)
+okc$Education <- gsub("graduated from space camp", "G from SC", okc$Education)
+
+#working on
+okc$Education <- gsub("working on high school", "W on HS", okc$Education)
+okc$Education <- gsub("working on college/university", "W on Uni", okc$Education)
+okc$Education <- gsub("working on two-year college", "W on 2YR", okc$Education)
+okc$Education <- gsub("working on masters program", "W on M", okc$Education)
+okc$Education <- gsub("working on law school", "W on LS", okc$Education)
+okc$Education <- gsub("working on med school", "W on Med", okc$Education)
+okc$Education <- gsub("working on ph.d program", "W on PhD", okc$Education)
+okc$Education <- gsub("working on space camp", "W on SC", okc$Education)
+
+#dropped out of
+okc$Education <- gsub("dropped out of high school", "DO of HS", okc$Education)
+okc$Education <- gsub("dropped out of college/university", "DO of Uni", okc$Education)
+okc$Education <- gsub("dropped out of two-year college", "DO of 2YR", okc$Education)
+okc$Education <- gsub("dropped out of masters program", "DO of M", okc$Education)
+okc$Education <- gsub("dropped out of law school", "DO of LS", okc$Education)
+okc$Education <- gsub("dropped out of med school", "DO of Med", okc$Education)
+okc$Education <- gsub("dropped out of ph.d program", "DO of PhD", okc$Education)
+okc$Education <- gsub("dropped out of space camp", "DO of SC", okc$Education)
+
+#graduated
+okc$Education <- gsub("high school", "G from HS", okc$Education)
+okc$Education <- gsub("college/university", "G from Uni", okc$Education)
+okc$Education <- gsub("two-year college", "G from 2YR", okc$Education)
+okc$Education <- gsub("masters program", "G from M", okc$Education)
+okc$Education <- gsub("law school", "G from Law", okc$Education)
+okc$Education <- gsub("med school", "G from Med", okc$Education)
+okc$Education <- gsub("ph.d program", "G from PhD", okc$Education)
+okc$Education <- gsub("space camp", "G from SC", okc$Education)
+
+#Create a new column with date not including the time
+`Last Date Online` <- substr(okc$`Last Online`, 1, 10)
+okc$`Last Date Online` <- `Last Date Online`
+
+#create new field with as of date
+`Data Pull Date` <- "2012-06-20"
+okc$`Data Pull Date` <- `Data Pull Date`
+```
+
+###Data Analysis/Visualization
+
+```{r}
+#Divide the data into male/female
+okc_f <- subset(okc, Gender == "f")
+okc_m <- subset(okc, Gender == "m")
+
+#Create the histogram of female heights of okc users
+hist(okc_f$`Height (in)`,  ylim = c(0, 4000), xlim = c(55, 75), main = "Histogram of Female Height of OkCupid Users", xlab = "Height", breaks = 125)
+
+#Look at how normal it really is
+qqnorm(okc_f$`Height (in)`)
+qqline(okc_f$`Height (in)`)
+
+#Create the histogram of female heights from datasets
+data(women)
+hist(women$height, main = "Histogram of Female Height", xlab = "Height", breaks = 6)
+
+#Table of aggregated smoker data
+Smoke <- table(okc$Smokes)
+
+#Relative frequency table of smoker data
+Smoke_Rel <- table(okc$Smokes)/59946
+barplot(Smoke)
+barplot(Smoke_Rel)
+
+#Comparing gender and smoking
+table(okc$Gender, okc$Smokes)/59946
+mosaicplot(table(okc$Gender, okc$Smokes), main = "Mosaic Plot of Gender & Smoking")
+
+((25635+18261)/59946)
+
+#Comparing gender and sexual orientation
+table(okc$Gender, okc$`Sexual Orientation`)/59946
+mosaicplot(table(okc$Gender, okc$`Sexual Orientation`), main = "Mosaic Plot of Gender & Sexual Orientation")
+
+#Comparing gender and body type
+barplot(table(okc$Gender, okc$`Body Type`), legend.text = TRUE, args.legend = list(x = "topright", bty = "n"), main = "Stacked Bar Chart of Gender & Body Type", xlab = "Body Type", ylab = "Frequency")
+(table(okc$Gender, okc$`Body Type`))/59946
+
+#Comparing gender and diet
+barplot(table(okc$Gender, okc$`Diet`), legend.text = TRUE, args.legend = list(x = "topright", bty = "n"), main = "Stacked Bar Chart of Gender & Diet", xlab = "Diet", ylab = "Frequency")
+(table(okc$Gender, okc$`Diet`))
+mosaicplot(table(okc$Gender, okc$`Diet`), main = "Mosaic Plot of Gender & Diet")
+
+#Comparing smoking and education
+table(okc$Education)
+table(okc$Smokes, okc$Education)
+mosaicplot(table(okc$Smokes, okc$Education), main = "Mosaic Plot of Smoking Habits & Education")
+table(okc$Education)/59946
+
+#Male vs. Female Height
+#Obviously, we would expect males to be taller in the population
+#The same proves true in our sample of okc users
+boxplot(okc$`Height (in)` ~ okc$Gender)
+histogram(~`Height (in)` | Gender, width=1, layout=c(1,2), xlab="Height in inches", data=okc)
+
+#ci_gender <- inference(okc$Gender, est = "proportion", type = "ci", method = "theoretical", success = "f")
+
+#ME calculation
+1.96 * 0.002
+```
+The following line of code runs fine in my R Markdown file, but when I try to knit, it produces the following error:
+
+Error:
+"Error in eval(expr, envir, enclos) : could not find function "inference" calls: <Anonymous> ... handle -> withCallingHandler -> withVisible -> eval -> eval"
+
+Code:
+ci_gender <- inference(okc$Gender, est = "proportion", type = "ci", method = "theoretical", success = "f")
+
+A screenshot of the output of the function is below for your reference. I have decided to include this analysis in my project despite the error, given the fact that it's not throwing this error when run in R Markdown.
+
+![inference output](http://github.com/excelsiordata/DATA607/blob/master/inference.jpg?raw=true)
+
+Inference Output:
+Single proportion -- success: f 
+Summary statistics: p_hat = 0.4023 ;  n = 59946 
+Check conditions: number of successes = 24117 ; number of failures = 35829 
+Standard error = 0.002 
+95 % Confidence interval = ( 0.3984 , 0.4062 )
+
+The confidence interval for the proportion of females is (0.3984, 0.4062).
+
+Let's calculate the margin of error for the estimate of the proportion of the proportion of females:
+
+    ME = z* x SE
+    ME = 1.96 x 0.002
+    ME = 0.00392
+    ME = 0.392%
+
+###Conclusions regarding this population:  
+####Education  
+  41% of users have graduated with their Bachelor's  
+  15% of users have graduated with their Master's  
+  66.55% have a Bachelor's or greater (including those in school for  
+    advanced degrees beyond Bachelor's)  
+  Individuals with a college degree are most likely to be non-smokers.  
+  
+####Smoking  
+  Overall, 72% of users do not smoke.  
+  42% of male users do not smoke.  
+  30% of female users do not smoke.  
+    This is really interesting, because in data published by the CDC,  
+    less females reporting smoking than males. In the CDC data, it  
+    seemed like about half of the population reported smoking, and half  
+    reported not smoking. This is much different than what we're seeing  
+    here in the San Francisco population, which I believe speaks to the  
+    local culture. They are much more environmentally friendly and health  
+    conscious in California.  
+  Smoking is more common amongst the undereducated.  
+    
+####Sexual Orientation  
+  86% of  users are straight  
+  14% of users are not straight  
+  
+  There are almost three times as many bisexual females than bisexual  
+  males.  
+    3.3% of users are bisexual females  
+    1.2% of users are bisexual males  
+  
+  There are almost three times as many gay males than gay females.  
+    2.6% of users are gay females  
+    6.6% of users are gay males  
+    
+####Body Type  
+  "Curvy" is almost exclusively a body type used by females.  
+  The body types "Athletic" "Skinny" and "Jacked" are used much more  
+  commonly by males to describe themselves.  
+  Males are most commonly describing themselves as "Athletic",  
+  while females are most commonly describing themselves as "Average".  
+  
+####Diet  
+  This is much more half and half across gender than I thought it  
+  would be. I expected that more females would be vegetarian/vegan,  
+  but this is not the case. In looking at the mosaic plot of gender  
+  and diet, you can see that they look almost the same with just  
+  slight variations. A fun surprise to have discovered!  
